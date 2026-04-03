@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.EmailAlreadyExistsException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UserIsNotOwnerException;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -67,7 +66,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemsByUserId(Long userId) {
-        User user = userService.existsById(userId);
+        userService.existsById(userId);
 
         List<Item> items = itemRepository.findAllByUserId(userId);
 
