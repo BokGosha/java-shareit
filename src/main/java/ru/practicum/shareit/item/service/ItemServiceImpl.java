@@ -75,7 +75,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getItemsByUserId(Long ownerId) {
+    public List<ItemDto> getItemsByOwnerId(Long ownerId) {
         userService.existsById(ownerId);
 
         List<Item> items = itemRepository.findAllByOwner_Id(ownerId);
@@ -85,6 +85,8 @@ public class ItemServiceImpl implements ItemService {
                 bookingQueryService.getApprovedBookingsByItemIds(itemIds);
 
         LocalDateTime now = LocalDateTime.now();
+
+        System.out.println(now);
 
         return items.stream()
                 .map(item -> {

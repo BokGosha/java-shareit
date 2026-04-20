@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS bookings
     item_id    BIGINT                      NOT NULL,
     status VARCHAR(20)                     NOT NULL CHECK (status IN ('WAITING', 'APPROVED', 'CANCELLED', 'REJECTED')),
     FOREIGN KEY (booker_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE
+    FOREIGN KEY (item_id)   REFERENCES items (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS comments
@@ -34,5 +34,5 @@ CREATE TABLE IF NOT EXISTS comments
     author_id BIGINT NOT NULL,
     item_id   BIGINT NOT NULL,
     FOREIGN KEY (author_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE
+    FOREIGN KEY (item_id)   REFERENCES items (id) ON DELETE CASCADE
 );
