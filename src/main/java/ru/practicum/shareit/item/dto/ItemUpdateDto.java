@@ -11,5 +11,6 @@ public class ItemUpdateDto {
 
     @NotEmpty
     private String description;
+
     private Boolean available;
 }

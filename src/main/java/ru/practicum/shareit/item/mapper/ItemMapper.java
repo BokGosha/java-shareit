@@ -19,7 +19,7 @@ public final class ItemMapper {
         itemDto.setId(item.getId());
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
-        itemDto.setAvailable(item.getAvailable());
+        itemDto.setAvailable(item.getIsAvailable());
 
         User user = item.getOwner();
         UserDto userDto = UserMapper.mapUserToUserDto(user);
@@ -33,7 +33,7 @@ public final class ItemMapper {
 
         item.setName(itemCreateDto.getName());
         item.setDescription(itemCreateDto.getDescription());
-        item.setAvailable(itemCreateDto.getAvailable());
+        item.setIsAvailable(itemCreateDto.getAvailable());
 
         return item;
     }
@@ -48,7 +48,7 @@ public final class ItemMapper {
         }
 
         if (itemUpdateDto.getAvailable() != null) {
-            item.setAvailable(itemUpdateDto.getAvailable());
+            item.setIsAvailable(itemUpdateDto.getAvailable());
         }
 
         return item;
