@@ -6,10 +6,10 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemShortDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserIdDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
@@ -23,15 +23,14 @@ public final class BookingMapper {
         bookingDto.setStart(booking.getStart());
         bookingDto.setEnd(booking.getEnd());
         bookingDto.setStatus(booking.getStatus());
-        bookingDto.setItemName(booking.getItem().getName());
 
         User booker = booking.getBooker();
-        UserDto bookerDto = UserMapper.mapUserToUserDto(booker);
-        bookingDto.setBooker(bookerDto);
+        UserIdDto bookerIdDto = UserMapper.mapUserToUserIdDto(booker);
+        bookingDto.setBooker(bookerIdDto);
 
         Item item = booking.getItem();
-        ItemDto itemDto = ItemMapper.mapItemToItemDto(item);
-        bookingDto.setItem(itemDto);
+        ItemShortDto itemShortDto = ItemMapper.mapItemToItemShortDto(item);
+        bookingDto.setItem(itemShortDto);
 
         return bookingDto;
     }

@@ -1,8 +1,8 @@
 package ru.practicum.shareit.booking.repository;
 
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 
@@ -16,11 +16,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findAllByBooker_IdOrderByStartDesc(Long userId);
 
-    List<Booking> findAllByBooker_IdAndStartBeforeAndEndAfterOrderByStartDesc(
-            Long userId,
-            LocalDateTime now,
-            LocalDateTime now1
-    );
+    List<Booking> findAllByBooker_IdAndStartBeforeAndEndAfterOrderByStartDesc(Long userId,
+                                                                              LocalDateTime now,
+                                                                              LocalDateTime now1);
 
     List<Booking> findAllByBooker_IdAndEndBeforeOrderByStartDesc(Long userId, LocalDateTime now);
 
@@ -28,10 +26,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findAllByBooker_IdAndStatusOrderByStartDesc(Long userId, Status status);
 
-    boolean existsByItem_IdAndStatusAndStartLessThanAndEndGreaterThan(
-            Long id,
-            Status status,
-            @NotNull LocalDateTime end,
-            @NotNull LocalDateTime start
-    );
+    boolean existsByItem_IdAndStatusAndStartLessThanAndEndGreaterThan(Long id,
+                                                                      Status status,
+                                                                      LocalDateTime end,
+                                                                      LocalDateTime start);
+
+    List<Booking> findAllByItem_IdAndBooker_IdAndStatus(Long itemId, Long bookerId, Status status);
+
+    List<Booking> findAllByItem_Id(Long itemId);
 }

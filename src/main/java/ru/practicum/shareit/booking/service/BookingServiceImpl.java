@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
@@ -21,8 +20,6 @@ import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -37,24 +34,10 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto createBooking(Long bookerId, BookingCreateDto bookingCreateDto) {
-        validateStartAndEnd(bookingCreateDto.getStart(), bookingCreateDto.getEnd());
-
-        Item bookingItem = itemService.existsById(bookingCreateDto.getItemId());
         User booker = userService.existsById(bookerId);
+        Item bookingItem = itemService.existsById(bookingCreateDto.getItemId());
 
-        if (!bookingItem.getIsAvailable()) {
-            throw new BadRequestException("Вещь с id=" + bookingItem.getId() + " недоступна для бронирования");
-        }
-
-        boolean overlap = bookingRepository
-                .existsByItem_IdAndStatusAndStartLessThanAndEndGreaterThan(
-                        bookingItem.getId(),
-                        Status.APPROVED,
-                        bookingCreateDto.getEnd(),
-                        bookingCreateDto.getStart());
-        if (overlap) {
-            throw new BadRequestException("Вещь уже забронирована на эти даты");
-        }
+        validateBooking(bookingItem, bookingCreateDto);
 
         Booking booking = BookingMapper.mapBookingCreateDtoToBooking(bookingCreateDto);
         booking.setItem(bookingItem);
@@ -72,7 +55,8 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = existsById(id);
 
         if (!booking.getItem().getOwner().getId().equals(ownerId)) {
-            throw new UserIsNotOwnerException("Пользователь с id=" + ownerId + " не является владельцем вещи с id=" + id);
+            throw new UserIsNotOwnerException("Пользователь с id=" + ownerId
+                    + " не является владельцем вещи с id=" + id);
         }
 
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
@@ -83,12 +67,12 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingDto getBookingById(Long id, Long bookerOrOwnerId) {
         Booking booking = existsById(id);
-        User user = userService.existsById(bookerOrOwnerId);
+        userService.existsById(bookerOrOwnerId);
 
-        if (!(booking.getBooker().getId().equals(user.getId())
-                || booking.getItem().getOwner().getId().equals(user.getId()))) {
-            throw new UserIsNotOwnerException("Пользователь с id=" + bookerOrOwnerId +
-                    " не является владельцем или автором бронирования вещи с id=" + id);
+        if (!(booking.getBooker().getId().equals(bookerOrOwnerId)
+                || booking.getItem().getOwner().getId().equals(bookerOrOwnerId))) {
+            throw new UserIsNotOwnerException("Пользователь с id=" + bookerOrOwnerId
+                    + " не является владельцем или автором бронирования вещи с id=" + id);
         }
 
         return BookingMapper.mapBookingToBookingDto(booking);
@@ -102,11 +86,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingDto> getBookingsByBookerIdAndState(Long bookerId, String state) {
+        userService.existsById(bookerId);
+
         return getBookingsByUserId(bookerId, state);
     }
 
     @Override
     public List<BookingDto> getBookingsByOwnerIdAndState(Long ownerId, String state) {
+        userService.existsById(ownerId);
+
         return getBookingsByUserId(ownerId, state);
     }
 
@@ -130,8 +118,28 @@ public class BookingServiceImpl implements BookingService {
                 .toList();
     }
 
+    private void validateBooking(Item bookingItem, BookingCreateDto bookingCreateDto) {
+        validateStartAndEnd(bookingCreateDto.getStart(), bookingCreateDto.getEnd());
+
+        if (!bookingItem.getIsAvailable()) {
+            throw new BadRequestException("Вещь с id=" + bookingItem.getId()
+                    + " недоступна для бронирования");
+        }
+
+        boolean overlap = bookingRepository
+                .existsByItem_IdAndStatusAndStartLessThanAndEndGreaterThan(
+                        bookingItem.getId(),
+                        Status.APPROVED,
+                        bookingCreateDto.getEnd(),
+                        bookingCreateDto.getStart());
+        if (overlap) {
+            throw new BadRequestException("Вещь уже забронирована на эти даты");
+        }
+    }
+
     private void validateStartAndEnd(LocalDateTime start, LocalDateTime end) {
         LocalDateTime now = LocalDateTime.now();
+
         if (end.isBefore(now)) {
             throw new BadRequestException("Время завершения аренды в прошлом");
         }

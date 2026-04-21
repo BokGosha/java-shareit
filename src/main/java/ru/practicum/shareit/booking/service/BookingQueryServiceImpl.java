@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 
@@ -22,10 +23,24 @@ public class BookingQueryServiceImpl implements BookingQueryService {
         if (itemIds.isEmpty()) {
             return Map.of();
         }
+
         return bookingRepository
                 .findAllByItem_IdInAndStatus(itemIds, Status.APPROVED)
                 .stream()
                 .map(BookingMapper::mapBookingToBookingShortDto)
                 .collect(Collectors.groupingBy(BookingShortDto::getItemId));
+    }
+
+    @Override
+    public List<Booking> getApprovedBookingsByItemIdAndBookerId(Long itemId, Long bookerId) {
+        return bookingRepository.findAllByItem_IdAndBooker_IdAndStatus(itemId, bookerId, Status.APPROVED);
+    }
+
+    @Override
+    public List<BookingShortDto> getApprovedBookingsByItemId(Long itemId) {
+        return bookingRepository.findAllByItem_Id(itemId)
+                .stream()
+                .map(BookingMapper::mapBookingToBookingShortDto)
+                .toList();
     }
 }

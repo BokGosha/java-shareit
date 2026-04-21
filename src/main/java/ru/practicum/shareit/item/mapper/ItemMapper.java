@@ -2,9 +2,7 @@ package ru.practicum.shareit.item.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.dto.ItemCreateDto;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.mapper.UserMapper;
@@ -21,11 +19,18 @@ public final class ItemMapper {
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.getIsAvailable());
 
-        User user = item.getOwner();
-        UserDto userDto = UserMapper.mapUserToUserDto(user);
-        itemDto.setOwner(userDto);
-
         return itemDto;
+    }
+
+    public static ItemMoreDto mapItemToItemMoreDto(Item item) {
+        ItemMoreDto itemMoreDto = new ItemMoreDto();
+
+        itemMoreDto.setId(item.getId());
+        itemMoreDto.setName(item.getName());
+        itemMoreDto.setDescription(item.getDescription());
+        itemMoreDto.setAvailable(item.getIsAvailable());
+
+        return itemMoreDto;
     }
 
     public static Item mapItemCreateDtoToItem(ItemCreateDto itemCreateDto) {
@@ -36,6 +41,15 @@ public final class ItemMapper {
         item.setIsAvailable(itemCreateDto.getAvailable());
 
         return item;
+    }
+
+    public static ItemShortDto mapItemToItemShortDto(Item item) {
+        ItemShortDto itemShortDto = new ItemShortDto();
+
+        itemShortDto.setId(item.getId());
+        itemShortDto.setName(item.getName());
+
+        return itemShortDto;
     }
 
     public static Item updateItemFields(Item item, ItemUpdateDto itemUpdateDto) {
