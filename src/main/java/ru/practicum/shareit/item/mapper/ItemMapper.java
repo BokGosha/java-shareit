@@ -4,9 +4,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.dto.UserDto;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ItemMapper {
