@@ -1,67 +1,32 @@
 package ru.practicum.shareit.item.mapper;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.dto.*;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import ru.practicum.shareit.item.dto.ItemCreateDto;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMoreDto;
+import ru.practicum.shareit.item.dto.ItemShortDto;
+import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ItemMapper {
+@Mapper(componentModel = "spring")
+public interface ItemMapper {
 
-    public static ItemDto mapItemToItemDto(Item item) {
-        ItemDto itemDto = new ItemDto();
+    @Mapping(source = "isAvailable", target = "available")
+    ItemDto mapItemToItemDto(Item item);
 
-        itemDto.setId(item.getId());
-        itemDto.setName(item.getName());
-        itemDto.setDescription(item.getDescription());
-        itemDto.setAvailable(item.getIsAvailable());
+    @Mapping(source = "isAvailable", target = "available")
+    ItemMoreDto mapItemToItemMoreDto(Item item);
 
-        return itemDto;
-    }
+    @Mapping(source = "available", target = "isAvailable")
+    Item mapItemCreateDtoToItem(ItemCreateDto itemCreateDto);
 
-    public static ItemMoreDto mapItemToItemMoreDto(Item item) {
-        ItemMoreDto itemMoreDto = new ItemMoreDto();
+    ItemShortDto mapItemToItemShortDto(Item item);
 
-        itemMoreDto.setId(item.getId());
-        itemMoreDto.setName(item.getName());
-        itemMoreDto.setDescription(item.getDescription());
-        itemMoreDto.setAvailable(item.getIsAvailable());
-
-        return itemMoreDto;
-    }
-
-    public static Item mapItemCreateDtoToItem(ItemCreateDto itemCreateDto) {
-        Item item = new Item();
-
-        item.setName(itemCreateDto.getName());
-        item.setDescription(itemCreateDto.getDescription());
-        item.setIsAvailable(itemCreateDto.getAvailable());
-
-        return item;
-    }
-
-    public static ItemShortDto mapItemToItemShortDto(Item item) {
-        ItemShortDto itemShortDto = new ItemShortDto();
-
-        itemShortDto.setId(item.getId());
-        itemShortDto.setName(item.getName());
-
-        return itemShortDto;
-    }
-
-    public static Item updateItemFields(Item item, ItemUpdateDto itemUpdateDto) {
-        if (itemUpdateDto.getName() != null) {
-            item.setName(itemUpdateDto.getName());
-        }
-
-        if (itemUpdateDto.getDescription() != null) {
-            item.setDescription(itemUpdateDto.getDescription());
-        }
-
-        if (itemUpdateDto.getAvailable() != null) {
-            item.setIsAvailable(itemUpdateDto.getAvailable());
-        }
-
-        return item;
-    }
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(source = "available", target = "isAvailable")
+    void updateItemFields(@MappingTarget Item item, ItemUpdateDto itemUpdateDto);
 }

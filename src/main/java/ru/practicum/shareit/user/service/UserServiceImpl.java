@@ -21,11 +21,13 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private final UserMapper userMapper;
+
     @Override
     public List<UserDto> getUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(UserMapper::mapUserToUserDto)
+                .map(userMapper::mapUserToUserDto)
                 .toList();
     }
 
@@ -33,7 +35,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserById(Long id) {
         User user = existsById(id);
 
-        return UserMapper.mapUserToUserDto(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override
@@ -41,11 +43,11 @@ public class UserServiceImpl implements UserService {
     public UserDto createUser(UserCreateDto userCreateDto) {
         existsByEmail(userCreateDto.getEmail());
 
-        User user = UserMapper.mapUserCreateDtoToUser(userCreateDto);
+        User user = userMapper.mapUserCreateDtoToUser(userCreateDto);
 
         user = userRepository.save(user);
 
-        return UserMapper.mapUserToUserDto(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override
@@ -54,9 +56,9 @@ public class UserServiceImpl implements UserService {
         User user = existsById(id);
         existsByEmail(userUpdateDto.getEmail());
 
-        UserMapper.updateUserFields(user, userUpdateDto);
+        userMapper.updateUserFields(user, userUpdateDto);
 
-        return UserMapper.mapUserToUserDto(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override

@@ -31,6 +31,8 @@ public class BookingServiceImpl implements BookingService {
     private final UserService userService;
     private final ItemService itemService;
 
+    private final BookingMapper bookingMapper;
+
     @Override
     @Transactional
     public BookingDto createBooking(Long bookerId, BookingCreateDto bookingCreateDto) {
@@ -39,14 +41,14 @@ public class BookingServiceImpl implements BookingService {
 
         validateBooking(bookingItem, bookingCreateDto);
 
-        Booking booking = BookingMapper.mapBookingCreateDtoToBooking(bookingCreateDto);
+        Booking booking = bookingMapper.mapBookingCreateDtoToBooking(bookingCreateDto);
         booking.setItem(bookingItem);
         booking.setBooker(booker);
         booking.setStatus(Status.WAITING);
 
         booking = bookingRepository.save(booking);
 
-        return BookingMapper.mapBookingToBookingDto(booking);
+        return bookingMapper.mapBookingToBookingDto(booking);
     }
 
     @Override
@@ -61,7 +63,7 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
 
-        return BookingMapper.mapBookingToBookingDto(booking);
+        return bookingMapper.mapBookingToBookingDto(booking);
     }
 
     @Override
@@ -75,7 +77,7 @@ public class BookingServiceImpl implements BookingService {
                     + " не является владельцем или автором бронирования вещи с id=" + id);
         }
 
-        return BookingMapper.mapBookingToBookingDto(booking);
+        return bookingMapper.mapBookingToBookingDto(booking);
     }
 
     @Override
@@ -114,7 +116,7 @@ public class BookingServiceImpl implements BookingService {
         };
 
         return bookings.stream()
-                .map(BookingMapper::mapBookingToBookingDto)
+                .map(bookingMapper::mapBookingToBookingDto)
                 .toList();
     }
 
