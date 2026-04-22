@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EmailAlreadyExistsException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.model.User;
@@ -14,15 +15,19 @@ import ru.practicum.shareit.user.dto.UserUpdateDto;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private final UserMapper userMapper;
+
     @Override
     public List<UserDto> getUsers() {
-        return userRepository.findAll().stream()
-                .map(UserMapper::mapUserToUserDto)
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::mapUserToUserDto)
                 .toList();
     }
 
@@ -30,37 +35,38 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserById(Long id) {
         User user = existsById(id);
 
-        return UserMapper.mapUserToUserDto(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override
+    @Transactional
     public UserDto createUser(UserCreateDto userCreateDto) {
         existsByEmail(userCreateDto.getEmail());
 
-        User user = UserMapper.mapUserCreateDtoToUser(userCreateDto);
+        User user = userMapper.mapUserCreateDtoToUser(userCreateDto);
 
         user = userRepository.save(user);
 
-        return UserMapper.mapUserToUserDto(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override
+    @Transactional
     public UserDto updateUser(Long id, UserUpdateDto userUpdateDto) {
         User user = existsById(id);
         existsByEmail(userUpdateDto.getEmail());
 
-        user = UserMapper.updateUserFields(user, userUpdateDto);
+        userMapper.updateUserFields(user, userUpdateDto);
 
-        user = userRepository.update(user);
-
-        return UserMapper.mapUserToUserDto(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override
+    @Transactional
     public void deleteUserById(Long id) {
         existsById(id);
 
-        userRepository.delete(id);
+        userRepository.deleteById(id);
     }
 
     public User existsById(Long id) {

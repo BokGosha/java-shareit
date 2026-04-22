@@ -1,18 +1,16 @@
 package ru.practicum.shareit.item.dto;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class ItemCreateDto {
 
-    @NotEmpty
-    @NotNull
+    @NotBlank
     private String name;
 
-    @NotEmpty
-    @NotNull
+    @NotBlank
     private String description;
 
     @NotNull

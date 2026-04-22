@@ -1,63 +1,84 @@
 package ru.practicum.shareit.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
-        log.warn("404 Not Found: {}", e.getMessage());
+        log.warn("Not Found: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequestException(final BadRequestException e) {
-        log.warn("400 Bad Request: {}", e.getMessage());
+        log.warn("Bad Request: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(final MethodArgumentNotValidException e) {
-        String message = e.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + " " + error.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation error");
+    public ErrorResponse handleMissingRequestHeaderException(final MissingRequestHeaderException e) {
+        log.warn("Bad Request: пропущен заголовок {}", e.getHeaderName());
+        return new ErrorResponse("Пропущен заголовок: " + e.getHeaderName());
+    }
 
-        log.warn("400 Validation error: {}", message);
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidationException(final Exception e) {
+        String message;
+
+        if (e instanceof MethodArgumentNotValidException ex) {
+            message = ex.getBindingResult().getFieldErrors().stream()
+                    .map(error -> error.getField() + " " + error.getDefaultMessage())
+                    .collect(Collectors.joining("; "));
+        } else if (e instanceof ConstraintViolationException ex) {
+            message = ex.getConstraintViolations().stream()
+                    .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                    .collect(Collectors.joining("; "));
+        } else {
+            message = "Validation error";
+        }
+
+        if (message.isEmpty()) {
+            message = "Validation error";
+        }
+
+        log.warn("Validation error: {}", message);
         return new ErrorResponse(message);
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({UserIsNotOwnerException.class, UserIsNotBookerException.class})
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponse handleNotOwnerException(final UserIsNotOwnerException e) {
-        log.warn("403 Forbidden: {}", e.getMessage());
+    public ErrorResponse handleForbiddenException(final RuntimeException e) {
+        log.warn("Forbidden: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(EmailAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleEmailAlreadyExistsException(final EmailAlreadyExistsException e) {
-        log.warn("409 Conflict: {}", e.getMessage());
+        log.warn("Conflict: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleInternalServerError(final Exception e) {
-        log.error("500 Internal Server Error: {}", e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
+    public ErrorResponse handleInternalServerError(final Throwable e) {
+        log.error("Internal Server Error", e);
+        return new ErrorResponse("Внутренняя ошибка сервера: " + e.getMessage());
     }
 }
