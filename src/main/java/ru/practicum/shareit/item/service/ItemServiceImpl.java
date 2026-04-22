@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.service.BookingQueryService;
+import ru.practicum.shareit.booking.model.Status;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UserIsNotBookerException;
@@ -33,9 +35,9 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final CommentRepository commentRepository;
+    private final BookingRepository bookingRepository;
 
     private final UserService userService;
-    private final BookingQueryService bookingQueryService;
 
     @Override
     public List<ItemDto> getItems() {
@@ -50,7 +52,10 @@ public class ItemServiceImpl implements ItemService {
         Item item = existsById(id);
 
         List<CommentDto> itemComments = getCommentsByItemId(id);
-        List<BookingShortDto> itemBookings = bookingQueryService.getApprovedBookingsByItemId(id);
+//        List<BookingShortDto> itemBookings = bookingRepository.findAllByItem_Id(id)
+//                .stream()
+//                .map(BookingMapper::mapBookingToBookingShortDto)
+//                .toList();
 
         ItemMoreDto itemMoreDto = ItemMapper.mapItemToItemMoreDto(item);
         itemMoreDto.setComments(itemComments);
@@ -97,7 +102,10 @@ public class ItemServiceImpl implements ItemService {
         List<Long> itemIds = items.stream().map(Item::getId).toList();
 
         Map<Long, List<BookingShortDto>> bookingsByItem =
-                bookingQueryService.getApprovedBookingsByItemIds(itemIds);
+                bookingRepository.findAllByItem_IdInAndStatus(itemIds, Status.APPROVED)
+                        .stream()
+                        .map(BookingMapper::mapBookingToBookingShortDto)
+                        .collect(Collectors.groupingBy(BookingShortDto::getItemId));
 
         Map<Long, List<CommentDto>> commentsByItem =
                 getCommentsByItemIds(itemIds);
@@ -146,7 +154,7 @@ public class ItemServiceImpl implements ItemService {
         User booker = userService.existsById(bookerId);
         Item item = existsById(itemId);
 
-        List<Booking> bookings = bookingQueryService.getApprovedBookingsByItemIdAndBookerId(itemId, bookerId);
+        List<Booking> bookings = bookingRepository.findAllByItem_IdAndBooker_IdAndStatus(itemId, bookerId, Status.APPROVED);
 
         if (bookings.isEmpty()) {
             throw new UserIsNotBookerException("Пользовать с id=" + bookerId + " не является автором бронирования вещи");
