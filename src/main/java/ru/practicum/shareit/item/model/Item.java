@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -19,7 +18,6 @@ public class Item {
     private Long id;
 
     @Column(nullable = false)
-    @NotBlank
     private String name;
 
     @Column(nullable = false)
@@ -30,5 +28,6 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
+    @ToString.Exclude
     private User owner;
 }
