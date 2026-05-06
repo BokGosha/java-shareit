@@ -187,8 +187,10 @@ public class ItemServiceImpl implements ItemService {
         return commentRepository
                 .findAllByItem_IdIn(itemIds)
                 .stream()
-                .map(commentMapper::mapCommentToCommentDto)
-                .collect(Collectors.groupingBy(CommentDto::getItemId));
+                .collect(Collectors.groupingBy(
+                        comment -> comment.getItem().getId(),
+                        Collectors.mapping(commentMapper::mapCommentToCommentDto, Collectors.toList())
+                ));
     }
 
     private void setLastAndNextBooking(LocalDateTime now, ItemMoreDto itemMoreDto, List<BookingShortDto> itemBookings) {
