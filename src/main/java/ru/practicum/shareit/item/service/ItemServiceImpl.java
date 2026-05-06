@@ -19,6 +19,8 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
@@ -37,6 +39,7 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
 
+    private final ItemRequestService itemRequestService;
     private final UserService userService;
 
     private final ItemMapper itemMapper;
@@ -75,6 +78,12 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto createItem(Long ownerId, ItemCreateDto itemCreateDto) {
         User user = userService.existsById(ownerId);
         Item item = itemMapper.mapItemCreateDtoToItem(itemCreateDto);
+
+        if (itemCreateDto.getRequestId() != null) {
+            ItemRequest itemRequest = itemRequestService.existsById(itemCreateDto.getRequestId());
+
+            item.setRequest(itemRequest);
+        }
 
         item.setOwner(user);
 
