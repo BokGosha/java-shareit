@@ -1,16 +1,15 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Data;
-
-import java.util.ArrayList;
 import java.util.List;
 
-@Data
-public class ItemDto {
-
-    private Long id;
-    private String name;
-    private String description;
-    private Boolean available;
-    private List<CommentDto> comments = new ArrayList<>();
+public record ItemDto(
+        Long id,
+        String name,
+        String description,
+        Boolean available,
+        List<CommentDto> comments
+) {
+    public ItemDto {
+        comments = comments != null ? comments : List.of();
+    }
 }

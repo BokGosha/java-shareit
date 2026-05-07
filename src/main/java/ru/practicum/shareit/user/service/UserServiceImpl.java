@@ -5,12 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EmailAlreadyExistsException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -25,15 +25,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getUsers() {
-        return userRepository.findAll()
-                .stream()
+        return userRepository.findAll().stream()
                 .map(userMapper::mapUserToUserDto)
                 .toList();
     }
 
     @Override
-    public UserDto getUserById(Long id) {
-        User user = existsById(id);
+    public UserDto getUserById(Long userId) {
+        User user = existsById(userId);
 
         return userMapper.mapUserToUserDto(user);
     }
@@ -41,7 +40,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto createUser(UserCreateDto userCreateDto) {
-        existsByEmail(userCreateDto.getEmail());
+        existsByEmail(userCreateDto.email());
 
         User user = userMapper.mapUserCreateDtoToUser(userCreateDto);
 
@@ -52,9 +51,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto updateUser(Long id, UserUpdateDto userUpdateDto) {
-        User user = existsById(id);
-        existsByEmail(userUpdateDto.getEmail());
+    public UserDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
+        User user = existsById(userId);
+        existsByEmail(userUpdateDto.email());
 
         userMapper.updateUserFields(user, userUpdateDto);
 
@@ -63,15 +62,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUserById(Long id) {
-        existsById(id);
+    public void deleteUserById(Long userId) {
+        existsById(userId);
 
-        userRepository.deleteById(id);
+        userRepository.deleteById(userId);
     }
 
-    public User existsById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
+    public User existsById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 
     private void existsByEmail(String email) {

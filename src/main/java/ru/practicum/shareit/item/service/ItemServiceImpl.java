@@ -55,22 +55,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemMoreDto getItemById(Long id) {
-        Item item = existsById(id);
+    public ItemMoreDto getItemById(Long itemId) {
+        Item item = existsById(itemId);
 
-        List<CommentDto> itemComments = getCommentsByItemId(id);
-//        List<BookingShortDto> itemBookings = bookingRepository.findAllByItem_Id(id)
+        List<CommentDto> itemComments = getCommentsByItemId(itemId);
+//        List<BookingShortDto> itemBookings = bookingRepository.findAllByItem_Id(itemId)
 //                .stream()
 //                .map(bookingMapper::mapBookingToBookingShortDto)
 //                .toList();
 
         ItemMoreDto itemMoreDto = itemMapper.mapItemToItemMoreDto(item);
-        itemMoreDto.setComments(itemComments);
 
 //        LocalDateTime now = LocalDateTime.now();
-//        setLastAndNextBooking(now, itemMoreDto, itemBookings);
+//        return setLastAndNextBooking(now, itemMoreDto, itemBookings, itemComments);
 
-        return itemMoreDto;
+        return withComments(itemMoreDto, itemComments);
     }
 
     @Override
@@ -79,8 +78,8 @@ public class ItemServiceImpl implements ItemService {
         User user = userService.existsById(ownerId);
         Item item = itemMapper.mapItemCreateDtoToItem(itemCreateDto);
 
-        if (itemCreateDto.getRequestId() != null) {
-            ItemRequest itemRequest = itemRequestService.existsById(itemCreateDto.getRequestId());
+        if (itemCreateDto.requestId() != null) {
+            ItemRequest itemRequest = itemRequestService.existsById(itemCreateDto.requestId());
 
             item.setRequest(itemRequest);
         }
@@ -94,12 +93,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemDto updateItem(Long id, Long ownerId, ItemUpdateDto itemUpdateDto) {
-        Item item = existsById(id);
+    public ItemDto updateItem(Long itemId, Long ownerId, ItemUpdateDto itemUpdateDto) {
+        Item item = existsById(itemId);
         User user = userService.existsById(ownerId);
 
         if (!item.getOwner().getId().equals(user.getId())) {
-            throw new UserIsNotOwnerException("Пользователь с id=" + ownerId + " не является владельцем вещи с id=" + id);
+            throw new UserIsNotOwnerException("Пользователь с id=" + ownerId + " не является владельцем вещи с id=" + itemId);
         }
 
         itemMapper.updateItemFields(item, itemUpdateDto);
@@ -118,7 +117,7 @@ public class ItemServiceImpl implements ItemService {
                 bookingRepository.findAllByItem_IdInAndStatus(itemIds, Status.APPROVED)
                         .stream()
                         .map(bookingMapper::mapBookingToBookingShortDto)
-                        .collect(Collectors.groupingBy(BookingShortDto::getItemId));
+                        .collect(Collectors.groupingBy(BookingShortDto::itemId));
 
         Map<Long, List<CommentDto>> commentsByItem =
                 getCommentsByItemIds(itemIds);
@@ -131,13 +130,10 @@ public class ItemServiceImpl implements ItemService {
                     List<BookingShortDto> itemBookings =
                             bookingsByItem.getOrDefault(item.getId(), List.of());
 
-                    setLastAndNextBooking(now, itemMoreDto, itemBookings);
-
                     List<CommentDto> itemComments =
                             commentsByItem.getOrDefault(item.getId(), List.of());
-                    itemMoreDto.setComments(itemComments);
 
-                    return itemMoreDto;
+                    return setLastAndNextBooking(now, itemMoreDto, itemBookings, itemComments);
                 })
                 .toList();
     }
@@ -156,9 +152,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item existsById(Long id) {
-        return itemRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Вещь с id=" + id + " не найдена"));
+    public Item existsById(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Вещь с id=" + itemId + " не найдена"));
     }
 
     @Override
@@ -202,16 +198,41 @@ public class ItemServiceImpl implements ItemService {
                 ));
     }
 
-    private void setLastAndNextBooking(LocalDateTime now, ItemMoreDto itemMoreDto, List<BookingShortDto> itemBookings) {
-        itemMoreDto.setLastBooking(itemBookings.stream()
-                .filter(b -> b.getStart().isBefore(now))
-                .max(Comparator.comparing(BookingShortDto::getStart))
-                .orElse(null));
+    private ItemMoreDto setLastAndNextBooking(LocalDateTime now,
+                                              ItemMoreDto itemMoreDto,
+                                              List<BookingShortDto> itemBookings,
+                                              List<CommentDto> comments) {
+        BookingShortDto lastBooking = itemBookings.stream()
+                .filter(b -> b.start().isBefore(now))
+                .max(Comparator.comparing(BookingShortDto::start))
+                .orElse(null);
 
-        itemMoreDto.setNextBooking(itemBookings.stream()
-                .filter(b -> b.getStart().isAfter(now))
-                .min(Comparator.comparing(BookingShortDto::getStart))
-                .orElse(null));
+        BookingShortDto nextBooking = itemBookings.stream()
+                .filter(b -> b.start().isAfter(now))
+                .min(Comparator.comparing(BookingShortDto::start))
+                .orElse(null);
+
+        return new ItemMoreDto(
+                itemMoreDto.id(),
+                itemMoreDto.name(),
+                itemMoreDto.description(),
+                itemMoreDto.available(),
+                lastBooking,
+                nextBooking,
+                comments
+        );
+    }
+
+    private ItemMoreDto withComments(ItemMoreDto itemMoreDto, List<CommentDto> comments) {
+        return new ItemMoreDto(
+                itemMoreDto.id(),
+                itemMoreDto.name(),
+                itemMoreDto.description(),
+                itemMoreDto.available(),
+                itemMoreDto.lastBooking(),
+                itemMoreDto.nextBooking(),
+                comments
+        );
     }
 
     private List<CommentDto> getCommentsByItemId(Long itemId) {

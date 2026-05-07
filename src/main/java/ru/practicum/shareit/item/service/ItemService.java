@@ -9,17 +9,17 @@ public interface ItemService {
 
     List<ItemDto> getItems();
 
-    ItemMoreDto getItemById(Long id);
+    ItemMoreDto getItemById(Long itemId);
 
     ItemDto createItem(Long ownerId, ItemCreateDto itemCreateDto);
 
-    ItemDto updateItem(Long id, Long ownerId, ItemUpdateDto itemUpdateDto);
+    ItemDto updateItem(Long itemId, Long ownerId, ItemUpdateDto itemUpdateDto);
 
     List<ItemMoreDto> getItemsByOwnerId(Long ownerId);
 
     List<ItemDto> getItemsByText(String text);
 
-    Item existsById(Long id);
+    Item existsById(Long itemId);
 
     CommentDto createComment(Long bookerId, Long itemId, CommentCreateDto itemCreateDto);
 }

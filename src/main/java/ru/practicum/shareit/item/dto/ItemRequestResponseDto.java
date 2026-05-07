@@ -1,11 +1,8 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Data;
-
-@Data
-public class ItemRequestResponseDto {
-
-    private Long id;
-    private String name;
-    private Long ownerId;
+public record ItemRequestResponseDto(
+        Long id,
+        String name,
+        Long ownerId
+) {
 }

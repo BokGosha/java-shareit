@@ -10,11 +10,11 @@ public interface BookingService {
 
     BookingDto createBooking(Long bookerId, BookingCreateDto bookingCreateDto);
 
-    BookingDto updateBooking(Long id, Long ownerId, Boolean approved);
+    BookingDto updateBooking(Long bookingId, Long ownerId, Boolean approved);
 
-    BookingDto getBookingById(Long id, Long bookerOrOwnerId);
+    BookingDto getBookingById(Long bookingId, Long bookerOrOwnerId);
 
-    Booking existsById(Long id);
+    Booking existsById(Long bookingId);
 
     List<BookingDto> getBookingsByBookerIdAndState(Long bookerId, String state);
 

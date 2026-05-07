@@ -41,23 +41,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         List<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestor_IdOrderByCreatedDesc(requestorId);
         List<Long> itemRequestIds = itemRequests.stream().map(ItemRequest::getId).toList();
 
-        Map<Long, List<ItemRequestResponseDto>> responses = itemRepository
-                .findAllByRequest_IdIn(itemRequestIds)
-                .stream()
-                .collect(Collectors.groupingBy(
-                        item -> item.getRequest().getId(),
-                        Collectors.mapping(itemMapper::mapItemToItemRequestResponseDto, Collectors.toList())
-                ));
+        Map<Long, List<ItemRequestResponseDto>> responses = itemRepository.findAllByRequest_IdIn(itemRequestIds).stream().collect(Collectors.groupingBy(item -> item.getRequest().getId(), Collectors.mapping(itemMapper::mapItemToItemRequestResponseDto, Collectors.toList())));
 
         return itemRequests.stream()
                 .map(itemRequest -> {
-                    ItemRequestWithResponsesDto itemRequestWithResponsesDto = itemRequestMapper
-                            .mapItemRequestToItemRequestWithResponsesDto(itemRequest);
-
                     List<ItemRequestResponseDto> itemResponses = responses.getOrDefault(itemRequest.getId(), List.of());
-                    itemRequestWithResponsesDto.setItems(itemResponses);
 
-                    return itemRequestWithResponsesDto;
+                    return itemRequestMapper.mapItemRequestToItemRequestWithResponsesDto(itemRequest, itemResponses);
                 })
                 .toList();
     }
@@ -66,8 +56,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestDto> getUsersRequests(Long userId) {
         userService.existsById(userId);
 
-        return itemRequestRepository.findAllOByIdIsNotOrderByCreatedDesc(userId)
-                .stream()
+        return itemRequestRepository.findAllOByIdIsNotOrderByCreatedDesc(userId).stream()
                 .map(itemRequestMapper::mapItemRequestToItemRequestDto)
                 .toList();
     }
@@ -76,10 +65,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Transactional
     public ItemRequestDto createRequest(Long requestorId, ItemRequestCreateDto itemRequestCreateDto) {
         User requestor = userService.existsById(requestorId);
-        ItemRequest itemRequest = itemRequestMapper.mapItemRequestCreateDtoToItem(itemRequestCreateDto);
 
+        ItemRequest itemRequest = itemRequestMapper.mapItemRequestCreateDtoToItem(itemRequestCreateDto);
         itemRequest.setCreated(LocalDateTime.now());
-        System.out.println(itemRequest);
         itemRequest.setRequestor(requestor);
 
         itemRequest = itemRequestRepository.save(itemRequest);
@@ -91,22 +79,16 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public ItemRequestWithResponsesDto getRequestById(Long requestId) {
         ItemRequest itemRequest = existsById(requestId);
 
-        ItemRequestWithResponsesDto itemRequestWithResponsesDto = itemRequestMapper
-                .mapItemRequestToItemRequestWithResponsesDto(itemRequest);
-
-        List<ItemRequestResponseDto> itemResponses = itemRepository.findAllByRequest_Id(requestId)
-                .stream()
+        List<ItemRequestResponseDto> itemResponses = itemRepository.findAllByRequest_Id(requestId).stream()
                 .map(itemMapper::mapItemToItemRequestResponseDto)
                 .toList();
 
-        itemRequestWithResponsesDto.setItems(itemResponses);
-
-        return itemRequestWithResponsesDto;
+        return itemRequestMapper.mapItemRequestToItemRequestWithResponsesDto(itemRequest, itemResponses);
     }
 
     @Override
-    public ItemRequest existsById(Long id) {
-        return itemRequestRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Запрос с id=" + id + " не найден"));
+    public ItemRequest existsById(Long requestId) {
+        return itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Запрос с id=" + requestId + " не найден"));
     }
 }

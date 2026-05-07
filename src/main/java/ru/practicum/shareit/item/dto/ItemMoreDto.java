@@ -1,19 +1,19 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Data;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@Data
-public class ItemMoreDto {
-
-    private Long id;
-    private String name;
-    private String description;
-    private Boolean available;
-    private BookingShortDto lastBooking;
-    private BookingShortDto nextBooking;
-    private List<CommentDto> comments = new ArrayList<>();
+public record ItemMoreDto(
+        Long id,
+        String name,
+        String description,
+        Boolean available,
+        BookingShortDto lastBooking,
+        BookingShortDto nextBooking,
+        List<CommentDto> comments
+) {
+    public ItemMoreDto {
+        comments = comments != null ? comments : List.of();
+    }
 }

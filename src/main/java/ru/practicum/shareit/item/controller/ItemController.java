@@ -21,9 +21,9 @@ public class ItemController {
         return itemService.getItems();
     }
 
-    @GetMapping("/{id}")
-    public ItemMoreDto getItemById(@PathVariable Long id) {
-        return itemService.getItemById(id);
+    @GetMapping("/{itemId}")
+    public ItemMoreDto getItemById(@PathVariable Long itemId) {
+        return itemService.getItemById(itemId);
     }
 
     @GetMapping(headers = "X-Sharer-User-Id")
@@ -38,23 +38,29 @@ public class ItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long ownerId,
-                              @Valid @RequestBody ItemCreateDto itemCreateDto) {
+    public ItemDto createItem(
+            @RequestHeader("X-Sharer-User-Id") Long ownerId,
+            @Valid @RequestBody ItemCreateDto itemCreateDto
+    ) {
         return itemService.createItem(ownerId, itemCreateDto);
     }
 
     @PostMapping("/{itemId}/comment")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentDto createComment(@RequestHeader("X-Sharer-User-Id") Long bookerId,
-                                    @PathVariable Long itemId,
-                                    @Valid @RequestBody CommentCreateDto itemCreateDto) {
+    public CommentDto createComment(
+            @RequestHeader("X-Sharer-User-Id") Long bookerId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody CommentCreateDto itemCreateDto
+    ) {
         return itemService.createComment(bookerId, itemId, itemCreateDto);
     }
 
     @PatchMapping("/{id}")
-    public ItemDto updateItem(@PathVariable Long id,
-                              @RequestHeader("X-Sharer-User-Id") Long ownerId,
-                              @RequestBody ItemUpdateDto itemUpdateDto) {
+    public ItemDto updateItem(
+            @PathVariable Long id,
+            @RequestHeader("X-Sharer-User-Id") Long ownerId,
+            @RequestBody ItemUpdateDto itemUpdateDto
+    ) {
         return itemService.updateItem(id, ownerId, itemUpdateDto);
     }
 }

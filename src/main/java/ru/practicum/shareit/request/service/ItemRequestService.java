@@ -17,5 +17,5 @@ public interface ItemRequestService {
 
     ItemRequestWithResponsesDto getRequestById(Long requestId);
 
-    ItemRequest existsById(Long id);
+    ItemRequest existsById(Long requestId);
 }
