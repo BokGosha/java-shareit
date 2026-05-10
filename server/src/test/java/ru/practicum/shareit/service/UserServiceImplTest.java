@@ -144,6 +144,22 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("updateUser: throws when new email already taken")
+    void updateUser_whenEmailTaken_throws() {
+        UserUpdateDto updateDto = new UserUpdateDto("New", "taken@example.com");
+        User other = new User();
+        other.setId(2L);
+        other.setEmail("taken@example.com");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("taken@example.com")).thenReturn(Optional.of(other));
+
+        assertThatThrownBy(() -> userService.updateUser(1L, updateDto))
+                .isInstanceOf(EmailAlreadyExistsException.class);
+        verify(userMapper, never()).updateUserFields(any(), any());
+    }
+
+    @Test
     @DisplayName("deleteUserById: deletes when exists")
     void deleteUserById_whenExists_deletes() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));

@@ -234,4 +234,114 @@ class BookingServiceImplTest {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    @DisplayName("createBooking: throws when end is before now")
+    void createBooking_whenEndInPast_throws() {
+        BookingCreateDto dto = new BookingCreateDto(
+                10L,
+                LocalDateTime.now().minusDays(2),
+                LocalDateTime.now().minusDays(1));
+
+        when(userService.existsById(2L)).thenReturn(booker);
+        when(itemService.existsById(10L)).thenReturn(item);
+
+        assertThatThrownBy(() -> bookingService.createBooking(2L, dto))
+                .isInstanceOf(BadRequestException.class);
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("createBooking: throws when end equals start")
+    void createBooking_whenEndEqualsStart_throws() {
+        LocalDateTime sameMoment = LocalDateTime.now().plusDays(1);
+        BookingCreateDto dto = new BookingCreateDto(10L, sameMoment, sameMoment);
+
+        when(userService.existsById(2L)).thenReturn(booker);
+        when(itemService.existsById(10L)).thenReturn(item);
+
+        assertThatThrownBy(() -> bookingService.createBooking(2L, dto))
+                .isInstanceOf(BadRequestException.class);
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("createBooking: throws when overlapping booking exists")
+    void createBooking_whenOverlap_throws() {
+        BookingCreateDto dto = new BookingCreateDto(
+                10L,
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(2));
+
+        when(userService.existsById(2L)).thenReturn(booker);
+        when(itemService.existsById(10L)).thenReturn(item);
+        when(bookingRepository.existsByItem_IdAndStatusAndStartLessThanAndEndGreaterThan(
+                eq(10L), eq(Status.APPROVED), any(), any())).thenReturn(true);
+
+        assertThatThrownBy(() -> bookingService.createBooking(2L, dto))
+                .isInstanceOf(BadRequestException.class);
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateBooking: rejects when approved=false")
+    void updateBooking_whenOwnerRejects_setsRejected() {
+        when(bookingRepository.findById(100L)).thenReturn(Optional.of(booking));
+        when(bookingMapper.mapBookingToBookingDto(booking)).thenReturn(bookingDto);
+
+        bookingService.updateBooking(100L, 1L, false);
+
+        assertThat(booking.getStatus()).isEqualTo(Status.REJECTED);
+    }
+
+    @Test
+    @DisplayName("getBookingById: returns booking for owner")
+    void getBookingById_whenOwner_returns() {
+        when(bookingRepository.findById(100L)).thenReturn(Optional.of(booking));
+        when(userService.existsById(1L)).thenReturn(owner);
+        when(bookingMapper.mapBookingToBookingDto(booking)).thenReturn(bookingDto);
+
+        BookingDto result = bookingService.getBookingById(100L, 1L);
+
+        assertThat(result).isEqualTo(bookingDto);
+    }
+
+    @Test
+    @DisplayName("getBookingsByBookerIdAndState: CURRENT delegates to current finder")
+    void getBookingsByBookerIdAndState_current_returns() {
+        when(userService.existsById(2L)).thenReturn(booker);
+        when(bookingRepository.findAllByBooker_IdAndStartBeforeAndEndAfterOrderByStartDesc(
+                eq(2L), any(), any())).thenReturn(List.of(booking));
+        when(bookingMapper.mapBookingToBookingDto(booking)).thenReturn(bookingDto);
+
+        List<BookingDto> result = bookingService.getBookingsByBookerIdAndState(2L, "CURRENT");
+
+        assertThat(result).containsExactly(bookingDto);
+    }
+
+    @Test
+    @DisplayName("getBookingsByBookerIdAndState: PAST delegates to past finder")
+    void getBookingsByBookerIdAndState_past_returns() {
+        when(userService.existsById(2L)).thenReturn(booker);
+        when(bookingRepository.findAllByBooker_IdAndEndBeforeOrderByStartDesc(eq(2L), any()))
+                .thenReturn(List.of(booking));
+        when(bookingMapper.mapBookingToBookingDto(booking)).thenReturn(bookingDto);
+
+        List<BookingDto> result = bookingService.getBookingsByBookerIdAndState(2L, "PAST");
+
+        assertThat(result).containsExactly(bookingDto);
+    }
+
+    @Test
+    @DisplayName("getBookingsByBookerIdAndState: FUTURE delegates to future finder")
+    void getBookingsByBookerIdAndState_future_returns() {
+        when(userService.existsById(2L)).thenReturn(booker);
+        when(bookingRepository.findAllByBooker_IdAndStartAfterOrderByStartDesc(eq(2L), any()))
+                .thenReturn(List.of(booking));
+        when(bookingMapper.mapBookingToBookingDto(booking)).thenReturn(bookingDto);
+
+        List<BookingDto> result = bookingService.getBookingsByBookerIdAndState(2L, "FUTURE");
+
+        assertThat(result).containsExactly(bookingDto);
+    }
 }

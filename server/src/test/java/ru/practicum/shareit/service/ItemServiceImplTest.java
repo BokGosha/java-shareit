@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
@@ -296,6 +297,43 @@ class ItemServiceImplTest {
         assertThat(result).isEqualTo(commentDto);
         assertThat(comment.getAuthor()).isEqualTo(other);
         assertThat(comment.getItem()).isEqualTo(item);
+    }
+
+    @Test
+    @DisplayName("getItemsByOwnerId: computes last and next bookings")
+    void getItemsByOwnerId_setsLastAndNextBookings() {
+        LocalDateTime now = LocalDateTime.now();
+        Booking past = new Booking();
+        past.setId(1L);
+        past.setItem(item);
+        past.setStatus(Status.APPROVED);
+        past.setStart(now.minusDays(5));
+        past.setEnd(now.minusDays(4));
+
+        Booking future = new Booking();
+        future.setId(2L);
+        future.setItem(item);
+        future.setStatus(Status.APPROVED);
+        future.setStart(now.plusDays(1));
+        future.setEnd(now.plusDays(2));
+
+        BookingShortDto pastShort = new BookingShortDto(1L, 10L, 2L, past.getStart(), past.getEnd());
+        BookingShortDto futureShort = new BookingShortDto(2L, 10L, 2L, future.getStart(), future.getEnd());
+
+        when(userService.existsById(1L)).thenReturn(owner);
+        when(itemRepository.findAllByOwner_Id(1L)).thenReturn(List.of(item));
+        when(bookingRepository.findAllByItem_IdInAndStatus(List.of(10L), Status.APPROVED))
+                .thenReturn(List.of(past, future));
+        when(bookingMapper.mapBookingToBookingShortDto(past)).thenReturn(pastShort);
+        when(bookingMapper.mapBookingToBookingShortDto(future)).thenReturn(futureShort);
+        when(commentRepository.findAllByItem_IdIn(List.of(10L))).thenReturn(List.of());
+        when(itemMapper.mapItemToItemMoreDto(item)).thenReturn(itemMoreDto);
+
+        List<ItemMoreDto> result = itemService.getItemsByOwnerId(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().lastBooking()).isEqualTo(pastShort);
+        assertThat(result.getFirst().nextBooking()).isEqualTo(futureShort);
     }
 
     @Test
