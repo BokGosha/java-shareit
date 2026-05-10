@@ -205,7 +205,7 @@ class ItemServiceImplTest {
         List<ItemMoreDto> result = itemService.getItemsByOwnerId(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).id()).isEqualTo(10L);
+        assertThat(result.getFirst().id()).isEqualTo(10L);
     }
 
     @Test
