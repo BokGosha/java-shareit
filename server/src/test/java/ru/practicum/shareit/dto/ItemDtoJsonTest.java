@@ -70,9 +70,7 @@ public class ItemDtoJsonTest {
 
     @Test
     public void deserializeItemCreateDto() throws Exception {
-        String content = """
-            {"name":"Drill","description":"desc","available":true,"requestId":5}
-            """;
+        String content = "{\"name\":\"Drill\",\"description\":\"desc\",\"available\":true,\"requestId\":5}";
 
         ItemCreateDto dto = createJson.parseObject(content);
 
