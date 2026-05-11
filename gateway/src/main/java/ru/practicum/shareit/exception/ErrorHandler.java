@@ -52,11 +52,4 @@ public class ErrorHandler {
         log.warn("Bad request: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
-
-    @ExceptionHandler(Throwable.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleInternalServerError(final Throwable e) {
-        log.error("Internal Server Error", e);
-        return new ErrorResponse("Внутренняя ошибка шлюза: " + e.getMessage());
-    }
 }
